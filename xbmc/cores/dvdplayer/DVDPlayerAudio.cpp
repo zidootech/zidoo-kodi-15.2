@@ -30,6 +30,7 @@
 #include "cores/AudioEngine/AEFactory.h"
 #include "cores/AudioEngine/Utils/AEUtil.h"
 #include "cores/DataCacheCore.h"
+#include "cores/dvdplayer/DVDCodecs/Video/DVDVideoCodecRK.h"
 
 #include <sstream>
 #include <iomanip>
@@ -572,7 +573,7 @@ void CDVDPlayerAudio::Process()
     }
 
     // Zero out the frame data if we are supposed to silence the audio
-    if (m_silence || m_syncclock)
+    if ((m_silence || m_syncclock) && (!IsPassthrough()))
     {
       int size = audioframe.nb_frames * audioframe.framesize / audioframe.planes;
       for (unsigned int i=0; i<audioframe.planes; i++)
@@ -726,7 +727,10 @@ void CDVDPlayerAudio::HandleSyncError(double duration)
       error = m_error;
     }
 
-    m_pClock->Update(clock+error, absolute, limit - 0.001, "CDVDPlayerAudio::HandleSyncError2");
+    /* rk adjust the speed should not sync master clock */
+    double adjust_delay = (double)rk_get_adjust_latency();
+    if (adjust_delay == 0)
+      m_pClock->Update(clock+error, absolute, limit - 0.001, "CDVDPlayerAudio::HandleSyncError2");
   }
   else if (m_synctype == SYNC_RESAMPLE)
   {
@@ -766,7 +770,8 @@ bool CDVDPlayerAudio::OutputPacket(DVDAudioFrame &audioframe)
     // below a given threshold. the constants are aligned with known
     // durations: DTS = 11ms, AC3 = 32ms
     // during this stage audio is muted
-    if (error > DVD_MSEC_TO_TIME(10))
+    // here in passthrough  mode, skip & duplicate sync may cause power amplifier confuse; by rk :)
+    if ((error > DVD_MSEC_TO_TIME(10) && !IsPassthrough()) || (error > DVD_MSEC_TO_TIME(400)))
     {
       unsigned int nb_frames = audioframe.nb_frames;
       double duration = audioframe.duration;
@@ -793,7 +798,7 @@ bool CDVDPlayerAudio::OutputPacket(DVDAudioFrame &audioframe)
 
       m_dvdAudio.AddPackets(audioframe);
     }
-    else if (error < -DVD_MSEC_TO_TIME(32))
+    else if ((error < -DVD_MSEC_TO_TIME(32) && !IsPassthrough()) || (error < -DVD_MSEC_TO_TIME(200)))
     {
       m_dvdAudio.SetPlayingPts(audioframe.pts);
       CLog::Log(LOGNOTICE,"CDVDPlayerAudio::OutputPacket skipping a packets of duration %d",

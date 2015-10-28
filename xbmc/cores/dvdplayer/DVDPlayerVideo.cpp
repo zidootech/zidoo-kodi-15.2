@@ -356,6 +356,9 @@ void CDVDPlayerVideo::Process()
 
     if (pMsg->IsType(CDVDMsg::GENERAL_SYNCHRONIZE))
     {
+        m_packets.clear();
+      if(m_pVideoCodec)
+        m_pVideoCodec->Reset();
       if(((CDVDMsgGeneralSynchronize*)pMsg)->Wait(100, SYNCSOURCE_VIDEO))
       {
         CLog::Log(LOGDEBUG, "CDVDPlayerVideo - CDVDMsg::GENERAL_SYNCHRONIZE");
@@ -1223,8 +1226,8 @@ std::string CDVDPlayerVideo::GetPlayerInfo()
   s << ", vq:"   << setw(2) << min(99,GetLevel()) << "%";
   s << ", dc:"   << m_codecname;
   s << ", Mb/s:" << fixed << setprecision(2) << (double)GetVideoBitrate() / (1024.0*1024.0);
-  s << ", drop:" << m_iDroppedFrames;
-  s << ", skip:" << g_renderManager.GetSkippedFrames();
+  s << ", drop:" << 0;
+  s << ", skip:" << 0;
 
   int pc = m_pullupCorrection.GetPatternLength();
   if (pc > 0)

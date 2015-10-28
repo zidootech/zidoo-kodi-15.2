@@ -31,12 +31,15 @@
 #include "android/jni/AudioFormat.h"
 #include "android/jni/AudioManager.h"
 #include "android/jni/AudioTrack.h"
+#include "cores/dvdplayer/DVDCodecs/Video/DVDVideoCodecRK.h"
 
 using namespace jni;
 
 #if 0 //defined(__ARM_NEON__)
 #include <arm_neon.h>
 #include "utils/CPUInfo.h"
+
+
 
 // LGPLv2 from PulseAudio
 // float values from AE are pre-clamped so we do not need to clamp again here
@@ -75,7 +78,9 @@ static const AEChannel KnownChannels[] = { AE_CH_FL, AE_CH_FR, AE_CH_FC, AE_CH_L
 static bool Has71Support()
 {
   /* Android 5.0 introduced side channels */
-  return CJNIAudioManager::GetSDKVersion() >= 21;
+  /*teturn CJNIAudioManager::GetSDKVersion() >= 21;*/
+  /*all 7point1 in support in rockchip */
+  return true;
 }
 
 static AEChannel AUDIOTRACKChannelToAEChannel(int atChannel)
@@ -138,8 +143,8 @@ static CAEChannelInfo AUDIOTRACKChannelMaskToAEChannelMap(int atMask)
 
 static int AEChannelMapToAUDIOTRACKChannelMask(CAEChannelInfo info)
 {
-  if (info[0] == AE_CH_RAW)
-    return CJNIAudioFormat::CHANNEL_OUT_STEREO;
+  //if (info[0] == AE_CH_RAW)
+  //  return CJNIAudioFormat::CHANNEL_OUT_STEREO;
 #ifdef LIMIT_TO_STEREO_AND_5POINT1_AND_7POINT1
   if (info.Count() > 6 && Has71Support())
     return CJNIAudioFormat::CHANNEL_OUT_5POINT1
@@ -222,9 +227,11 @@ bool CAESinkAUDIOTRACK::Initialize(AEAudioFormat &format, std::string &device)
     aml_set_audio_passthrough(m_passthrough);
 #endif
 
+  rk_set_audio_passthrough(m_passthrough);
+
   int atChannelMask = AEChannelMapToAUDIOTRACKChannelMask(m_format.m_channelLayout);
 
-  m_format.m_sampleRate     = CJNIAudioTrack::getNativeOutputSampleRate(CJNIAudioManager::STREAM_MUSIC);
+  //m_format.m_sampleRate     = CJNIAudioTrack::getNativeOutputSampleRate(CJNIAudioManager::STREAM_MUSIC);
   m_format.m_dataFormat     = AE_FMT_S16LE;
 
   while (!m_at_jni)
@@ -314,6 +321,13 @@ void CAESinkAUDIOTRACK::GetDelay(AEDelayStatus& status)
 
   double delay = (double)(m_frames_written - head_pos) / m_format.m_sampleRate;
 
+  // delay may may be a transient error so a threshold here
+  if (delay > 0.4)
+    delay = 0.4;
+  /* use for rk 23.976 & 59.94 audio sync */
+  double adjust_delay = (double)rk_get_adjust_latency() / DVD_TIME_BASE;
+  delay += adjust_delay;
+  
   status.SetDelay(delay);
 }
 
@@ -413,6 +427,9 @@ void CAESinkAUDIOTRACK::EnumerateDevicesEx(AEDeviceInfoList &list, bool force)
   m_info.m_dataFormats.push_back(AE_FMT_S16LE);
   m_info.m_dataFormats.push_back(AE_FMT_AC3);
   m_info.m_dataFormats.push_back(AE_FMT_DTS);
+  m_info.m_dataFormats.push_back(AE_FMT_EAC3);
+  m_info.m_dataFormats.push_back(AE_FMT_TRUEHD);
+  m_info.m_dataFormats.push_back(AE_FMT_DTSHD);
 #if 0 //defined(__ARM_NEON__)
   if (g_cpuInfo.GetCPUFeatures() & CPU_FEATURE_NEON)
     m_info.m_dataFormats.push_back(AE_FMT_FLOAT);

@@ -177,7 +177,7 @@ bool CAEFactory::SupportsRaw(AEDataFormat format, int samplerate)
   // fixed config disabled passthrough
   if (CSettings::Get().GetInt("audiooutput.config") == AE_CONFIG_FIXED)
     return false;
-
+/*
   // check if the format is enabled in settings
   if (format == AE_FMT_AC3 && !CSettings::Get().GetBool("audiooutput.ac3passthrough"))
     return false;
@@ -189,7 +189,7 @@ bool CAEFactory::SupportsRaw(AEDataFormat format, int samplerate)
     return false;
   if (format == AE_FMT_DTSHD && !CSettings::Get().GetBool("audiooutput.dtshdpassthrough"))
     return false;
-
+*/
   if(AE)
     return AE->SupportsRaw(format, samplerate);
 

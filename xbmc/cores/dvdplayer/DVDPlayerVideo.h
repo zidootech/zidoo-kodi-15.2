@@ -92,7 +92,7 @@ public:
   double GetDelay()                                { return m_iVideoDelay; }
   void SetDelay(double delay)                      { m_iVideoDelay = delay; }
 
-  double GetSubtitleDelay()                                { return m_iSubtitleDelay; }
+  double GetSubtitleDelay()                                { extern int64_t rk_get_adjust_latency(); return m_iSubtitleDelay + (double)rk_get_adjust_latency(); }
   void SetSubtitleDelay(double delay)                      { m_iSubtitleDelay = delay; }
 
   bool IsStalled() const                            { return m_stalled; }

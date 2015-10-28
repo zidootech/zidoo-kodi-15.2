@@ -1296,8 +1296,8 @@ void CDVDPlayer::Process()
       continue;
 
     // if the queues are full, no need to read more
-    if ((!m_dvdPlayerAudio->AcceptsData() && m_CurrentAudio.id >= 0) ||
-        (!m_dvdPlayerVideo->AcceptsData() && m_CurrentVideo.id >= 0))
+    if (m_caching != CACHESTATE_INIT && 
+        ((!m_dvdPlayerAudio->AcceptsData() && m_CurrentAudio.id >= 0 && m_dvdPlayerVideo->GetLevel() > 50) || (!m_dvdPlayerVideo->AcceptsData() && m_CurrentVideo.id >= 0 && m_dvdPlayerAudio->GetLevel() > 50)))
     {
       if(m_pDemuxer && m_DemuxerPausePending)
       {
