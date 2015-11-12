@@ -1,3 +1,21 @@
+### zidoo-kodi-15.2
+
+This is a special branch for RockChip rk3368 platform. First of all, you need 
+the latest version of rk3368 sdk. The implement of decoder and render are same 
+as Amlogic. It request a library name "librkffplayer.so", you can find it on 
+latest version rk3368 sdk. 
+And the more important thing is, you need a device run with rk3368, such as Zidoo X6, 
+which had deep modified to meet this new speicial version.
+
+The below command show how to fetch the code:
+
+$git clone https://github.com/zidootech/zidoo-kodi-15.2.git zidoo-kodi-15.2
+
+You'd better to run your apk on Zidoo X6, we are not sure if it run well on other devices.
+
+Have fun and enjoy!
+
+
 #### About
 
 Kodi is an award-winning free and open source (GPL) software media player and
