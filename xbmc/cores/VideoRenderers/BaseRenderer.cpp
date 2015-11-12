@@ -219,6 +219,12 @@ void CBaseRenderer::FindResolutionFromFpsMatch(float fps, float& weight)
   }
 }
 
+void CBaseRenderer::setBestResolution(int width,int height)
+{
+	m_width = width;
+	m_height = height;
+}
+
 RESOLUTION CBaseRenderer::FindClosestResolution(float fps, float multiplier, RESOLUTION current, float& weight)
 {
   RESOLUTION_INFO curr = g_graphicsContext.GetResInfo(current);
@@ -231,15 +237,19 @@ RESOLUTION CBaseRenderer::FindClosestResolution(float fps, float multiplier, RES
   for (size_t i = (int)RES_DESKTOP; i < CDisplaySettings::Get().ResolutionInfoSize(); i++)
   {
     const RESOLUTION_INFO info = g_graphicsContext.GetResInfo((RESOLUTION)i);
-
+ CLog::Log(LOGNOTICE, "FindClosestResolution : %d (%d) ,%d (%d) ,%d (%d) ,%f (%f) ,%d(%d)",
+        info.iScreenWidth,m_width,info.iScreenHeight,m_height,info.iScreen,curr.iScreen,
+        info.fRefreshRate,((fRefreshRate * multiplier / 1.001) - 0.001),(info.dwFlags & D3DPRESENTFLAG_MODEMASK),
+        (curr.dwFlags & D3DPRESENTFLAG_MODEMASK));
     //discard resolutions that are not the same width and height (and interlaced/3D flags)
     //or have a too low refreshrate
-    if (info.iScreenWidth  != curr.iScreenWidth
-    ||  info.iScreenHeight != curr.iScreenHeight
+    if (info.iScreenWidth  != m_width
+    ||  info.iScreenHeight != m_height
     ||  info.iScreen       != curr.iScreen
     ||  (info.dwFlags & D3DPRESENTFLAG_MODEMASK) != (curr.dwFlags & D3DPRESENTFLAG_MODEMASK)
     ||  info.fRefreshRate < (fRefreshRate * multiplier / 1.001) - 0.001)
       continue;
+    	
 
     // For 3D choose the closest refresh rate 
     if(CONF_FLAGS_STEREO_MODE_MASK(m_iFlags))
@@ -259,13 +269,14 @@ RESOLUTION CBaseRenderer::FindClosestResolution(float fps, float multiplier, RES
     {
       int c_weight = MathUtils::round_int(RefreshWeight(curr.fRefreshRate, fRefreshRate * multiplier) * 1000.0);
       int i_weight = MathUtils::round_int(RefreshWeight(info.fRefreshRate, fRefreshRate * multiplier) * 1000.0);
-
+CLog::Log(LOGNOTICE, "i_weight=%d,%d",i_weight,c_weight);
       // Closer the better, prefer higher refresh rate if the same
       if ((i_weight <  c_weight)
-      ||  (i_weight == c_weight && info.fRefreshRate > curr.fRefreshRate))
+      ||  (i_weight == c_weight && info.fRefreshRate >= fps))
       {
         current = (RESOLUTION)i;
         curr    = info;
+		CLog::Log(LOGNOTICE, "current=%d",current);
       }
     }
   }
@@ -275,7 +286,6 @@ RESOLUTION CBaseRenderer::FindClosestResolution(float fps, float multiplier, RES
     weight = 0;
   else
     weight = RefreshWeight(curr.fRefreshRate, fRefreshRate * multiplier);
-
   return current;
 }
 

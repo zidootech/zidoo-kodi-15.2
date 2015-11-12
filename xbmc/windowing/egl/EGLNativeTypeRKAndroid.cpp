@@ -233,6 +233,11 @@ bool CEGLNativeTypeRKAndroid::GetPreferredResolution(RESOLUTION_INFO *res) const
 
 bool CEGLNativeTypeRKAndroid::SetDisplayResolution(const char *resolution)
 {
+  CLog::Log(LOGDEBUG,"EGL SetDisplayResolution %s",resolution);
+  // current 3d mode 
+  if (Get3DMode() >= 0)
+    return false;
+
   if (m_curHdmiResolution == resolution)
     return true;
 
@@ -255,5 +260,25 @@ bool CEGLNativeTypeRKAndroid::SetDisplayResolution(const char *resolution)
   m_curHdmiResolution = resolution;
 
   return true;
+}
+
+int CEGLNativeTypeRKAndroid::Get3DMode()
+{
+  std::string valstr;
+  if (SysfsUtils::GetString("/sys/class/display/display0.HDMI/3dmode", valstr) < 0 
+    && SysfsUtils::GetString("/sys/class/display/HDMI/3dmode", valstr) < 0)
+    return -1;
+  
+  std::vector<std::string> probe_str = StringUtils::Split(valstr, "\n");
+  for (size_t i = 0; i < probe_str.size(); i++)
+  {
+    if (StringUtils::StartsWith(probe_str[i], "cur3dmode="))
+    {
+      int mode;
+      sscanf(probe_str[i].c_str(),"cur3dmode=%d",&mode);
+      return mode;
+    }
+  }
+  return -1;
 }
 
