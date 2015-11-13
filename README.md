@@ -11,6 +11,9 @@ The below command show how to fetch the code:
 
 $git clone https://github.com/zidootech/zidoo-kodi-15.2.git zidoo-kodi-15.2
 
+You need to apply ffmpeg patch(kodi-ffmpeg-patch-20150910.patch) by manual.
+"git apply" or "git am" is not work for this branch.
+
 You'd better to run your apk on Zidoo X6, we are not sure if it run well on other devices.
 
 Have fun and enjoy!
