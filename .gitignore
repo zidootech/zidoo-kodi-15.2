@@ -99,6 +99,7 @@ config.log
 /git_revision.h
 /libtool
 /*.patch
+!/kodi-ffmpeg-patch-20150910.patch
 
 # /addons/
 /addons/com.nullsoft.milkdrop.xbmc/*.vis
